@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Web Search & Web Crawling – Ultra Master Notes</title>
+<style>
+body { font-family: Georgia, serif; background:#fcfcfc; margin:50px; line-height:1.8; color:#222; }
+h1,h2,h3 { color:#111; }
+h1 { border-bottom:4px solid #333; padding-bottom:10px; }
+h2 { margin-top:60px; border-bottom:2px solid #aaa; padding-bottom:6px; }
+h3 { margin-top:35px; }
+pre { background:#f4f4f4; padding:15px; overflow-x:auto; border-radius:6px; }
+code { background:#f4f4f4; padding:3px 6px; border-radius:4px; }
+table { border-collapse:collapse; margin:20px 0; }
+th,td { border:1px solid #999; padding:8px 12px; }
+.box { padding:18px; margin:25px 0; border-left:6px solid #444; background:#f8f8f8; }
+.key { border-left-color:#2c7; }
+.exam { border-left-color:#c72; }
+.mistake { border-left-color:#c33; }
+</style>
+</head>
+<body>
+
+<h1>WEB SEARCH BASICS & WEB CRAWLING<br>Ultra Deep Integrated Master Notes</h1>
+
+<h2>PART 1 — Web Search Foundations</h2>
+
+<h3>1. Why Web Search is Fundamentally Different from Classical IR</h3>
+
+Web Search introduces:
+<ul>
+<li>Massive scale (billions of pages)</li>
+<li>Dynamic content (constantly changing)</li>
+<li>Adversarial behavior (spam, SEO manipulation)</li>
+<li>Distributed architecture</li>
+</ul>
+
+<div class="key box">
+Web search is not just IR at scale.  
+Scale forces architectural innovation.
+</div>
+
+<h3>2. Types of Queries</h3>
+
+<table>
+<tr><th>Type</th><th>Goal</th><th>Example</th></tr>
+<tr><td>Informational</td><td>Learn something</td><td>Low hemoglobin causes</td></tr>
+<tr><td>Navigational</td><td>Go to specific site</td><td>United Airlines</td></tr>
+<tr><td>Transactional</td><td>Perform action</td><td>Canon S410, Buy iPhone</td></tr>
+</table>
+
+<div class="exam box">
+Navigational queries emphasize Precision@1.<br>
+Informational queries emphasize ranking quality.<br>
+Transactional queries mix retrieval + action.
+</div>
+
+<h3>3. The Web as a Graph</h3>
+
+Nodes = Pages  
+Edges = Hyperlinks  
+
+ASCII visualization:
+
+<pre>
+A → B
+A → D
+B → D
+D → E
+E → F
+</pre>
+
+Bow-tie structure:
+
+<pre>
+        IN
+         ↓
+    ----> SCC <----
+         ↓
+        OUT
+</pre>
+
+SCC = strongly connected core.
+
+<div class="key box">
+Ranking algorithms (PageRank) exploit link structure.
+</div>
+
+<hr>
+
+<h2>PART 2 — Duplicate Detection & MinHash (FULL Reconstruction)</h2>
+
+<h3>1. Why Duplicate Detection?</h3>
+
+Web contains:
+<ul>
+<li>Exact duplicates</li>
+<li>Near duplicates (30–40%)</li>
+</ul>
+
+User impact:
+If result 1 and 2 are identical → waste of ranking space.
+
+<h3>2. Shingling (Our Full Example)</h3>
+
+Sentence:
+
+<pre>a rose is a rose is a rose</pre>
+
+For n = 3 (trigrams):
+
+<pre>
+a-rose-is
+rose-is-a
+is-a-rose
+</pre>
+
+Set representation removes duplicates.
+
+<h3>3. Jaccard Similarity</h3>
+
+<pre>
+J(A,B) = |A ∩ B| / |A ∪ B|
+</pre>
+
+Interpretation:
+Fraction of shared shingles.
+
+<h3>4. Why Not Direct Jaccard?</h3>
+
+If each document has 100,000 shingles:
+Comparing pairwise is infeasible at web scale.
+
+We need compact representation.
+
+<h3>5. MinHash — Core Theorem</h3>
+
+<pre>
+Pr[minπ(A) = minπ(B)] = J(A,B)
+</pre>
+
+Reason:
+Under random permutation, minimum element equally likely from union.
+
+<h3>6. True vs Estimated Jaccard (Toy Example We Discussed)</h3>
+
+d1 = {s1, s3, s4}  
+d2 = {s2, s3, s5}
+
+True Jaccard:
+
+<pre>
+Intersection = 1
+Union = 5
+J = 1/5 = 0.2
+</pre>
+
+MinHash with only 2 hash functions gave 0.
+
+Why? High variance.
+
+Increase hash functions → better approximation.
+
+<div class="key box">
+MinHash is a Monte Carlo estimator of Jaccard similarity.
+</div>
+
+<h3>7. Hashing Black Box</h3>
+
+h: shingles → {0 .. 2^m − 1}
+
+Collisions inevitable (Pigeonhole Principle).
+
+Collision probability decreases as m increases.
+
+<hr>
+
+<h2>PART 3 — Web Crawling</h2>
+
+<h3>1. Basic Crawling Loop</h3>
+
+<pre>
+Initialize frontier with seed URLs
+Repeat:
+  Take URL
+  Fetch page
+  Parse links
+  Add new URLs
+</pre>
+
+Assumption: Web is well linked.
+
+<h3>2. Key Challenges</h3>
+
+<ul>
+<li>Scale</li>
+<li>Politeness</li>
+<li>Freshness</li>
+<li>Duplicates</li>
+<li>Spam</li>
+</ul>
+
+<h3>3. Politeness</h3>
+
+Do not overload host.
+
+Explicit politeness → robots.txt  
+Implicit politeness → delay between requests
+
+Example:
+
+<pre>
+User-agent: *
+Disallow: /temp/
+</pre>
+
+<h3>4. Freshness</h3>
+
+Revisit pages proportional to change rate.
+
+Priority = f(change rate, quality)
+
+Conflict:
+More freshness → more hits → less politeness.
+
+<hr>
+
+<h2>PART 4 — Mercator URL Frontier (Full Deep Reconstruction)</h2>
+
+Core idea:
+Separate WHAT to crawl from FROM WHERE to crawl.
+
+<h3>Architecture</h3>
+
+<pre>
+URLs → Prioritizer → K Front Queues
+             ↓
+   Biased Front Queue Selector
+             ↓
+       Back Queue Router
+             ↓
+     B Back Queues (1 host each)
+             ↓
+         Min-Heap (by earliest allowed time)
+             ↓
+        Crawl Threads
+</pre>
+
+<h3>Front Queues</h3>
+
+Priority buckets (importance-based).
+
+<h3>Back Queues</h3>
+
+Each queue contains URLs from exactly ONE host.
+
+<h3>Back Queue Heap (Our Favorite Example)</h3>
+
+Suppose 3 hosts:
+
+<table>
+<tr><th>Host</th><th>t_e (Next Allowed Time)</th></tr>
+<tr><td>wikipedia.org</td><td>10:00:01</td></tr>
+<tr><td>google.com</td><td>10:00:05</td></tr>
+<tr><td>amazon.com</td><td>10:00:20</td></tr>
+</table>
+
+Min-Heap:
+
+<pre>
+          wikipedia.org (10:00:01)
+           /                        \\
+ google.com (10:00:05)       amazon.com (10:00:20)
+</pre>
+
+Crawler always extracts root.
+
+After crawling:
+Update t_e
+Reinsert into heap.
+
+<div class="key box">
+Heap ensures optimal polite scheduling.
+</div>
+
+<h3>Back Queue Processing (Step-by-step)</h3>
+
+<pre>
+Extract heap root
+Fetch URL from host queue
+Update next allowed time
+Reinsert into heap
+If queue empty → refill from front queues
+</pre>
+
+<hr>
+
+<h2>PART 5 — Distributed Crawling</h2>
+
+<ul>
+<li>Multiple crawling threads</li>
+<li>Host-splitter assigns URLs to nodes</li>
+<li>DNS resolution bottleneck</li>
+<li>Use DNS cache</li>
+</ul>
+
+<hr>
+
+<h2>PART 6 — Distributed Indexing</h2>
+
+Two strategies:
+
+<table>
+<tr><th>Type</th><th>Partition By</th><th>Issue</th></tr>
+<tr><td>Term Partitioning</td><td>Words</td><td>Multi-term queries expensive</td></tr>
+<tr><td>Document Partitioning</td><td>Documents</td><td>IDF needs global aggregation</td></tr>
+</table>
+
+Modern systems → Document partitioning.
+
+Hash(URL) → node.
+
+<hr>
+
+<h2>Final Exam Mastery Section</h2>
+
+If you deeply understand:
+
+1. Jaccard & MinHash probability argument  
+2. Sketch estimation logic  
+3. Politeness vs Freshness tradeoff  
+4. Mercator frontier separation  
+5. Min-heap scheduling example  
+
+You are architect-level prepared.
+
+<div class="exam box">
+Most exam questions come from:<br>
+- Prove MinHash approximates Jaccard<br>
+- Explain Mercator frontier<br>
+- Compare term vs document partitioning<br>
+- Explain politeness vs freshness conflict
+</div>
+
+<h2>End of Ultra Master Notes</h2>
+
+</body>
+</html>
