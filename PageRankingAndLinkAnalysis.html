@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Web IR Master Notes - PageRank & HITS</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 40px;
+            max-width: 1000px;
+        }
+        h1, h2, h3 {
+            margin-top: 40px;
+        }
+        blockquote {
+            background: #f4f4f4;
+            padding: 10px 15px;
+            border-left: 4px solid #555;
+            margin: 15px 0;
+        }
+        code, pre {
+            background: #f9f9f9;
+            padding: 5px;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 15px;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background: #eee;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Structured Master Document</h1>
+
+<p>This document covers:</p>
+<ul>
+    <li>Hyperlinks & Web as Graph</li>
+    <li>Inlinks / Outlinks</li>
+    <li>Link as authority signal</li>
+    <li>Anchor text</li>
+    <li>Connectivity servers</li>
+    <li>PageRank (intuition → math → teleportation → steady state → power method)</li>
+    <li>HITS (soul, hubs, authorities, query-time difference)</li>
+</ul>
+
+<hr>
+
+<h1>🌐 1. Web as a Graph — The Foundational Shift</h1>
+
+<h2>Core Idea</h2>
+
+<p>The web is <strong>not a collection of documents</strong>.<br>
+It is a <strong>directed graph</strong>.</p>
+
+<ul>
+    <li>Pages = Nodes</li>
+    <li>Hyperlinks = Directed edges</li>
+</ul>
+
+<pre>A → B</pre>
+
+<p>This means:</p>
+<ul>
+    <li>B is an <strong>outlink of A</strong></li>
+    <li>A is an <strong>inlink of B</strong></li>
+</ul>
+
+<blockquote>
+Inlink / Outlink is relative to the page you are asking about.
+</blockquote>
+
+<hr>
+
+<h1>🔗 2. Why Links Matter (Authority Conferral)</h1>
+
+<h2>Deep Assumption</h2>
+
+<p>A hyperlink is a <strong>quality signal</strong>.</p>
+
+<p>When A links to B:</p>
+<ul>
+    <li>A’s author is implicitly endorsing B.</li>
+    <li>Links act like academic citations.</li>
+</ul>
+
+<p>But not all links are equal.</p>
+
+<blockquote>
+A link from a highly respected page is worth more than many links from weak pages.
+</blockquote>
+
+<p><strong>Analogy:</strong></p>
+<ul>
+    <li>One citation from Nature &gt; 1000 citations from unknown blogs.</li>
+</ul>
+
+<hr>
+
+<h1>🧠 3. Anchor Text — External Meaning</h1>
+
+<p>Anchor text = words used in a hyperlink.</p>
+
+<pre>
+&lt;a href="ibm.com"&gt;IBM official site&lt;/a&gt;
+</pre>
+
+<p>Even if IBM homepage doesn’t say “IBM” clearly,
+search engines use anchor text from other pages to understand it.</p>
+
+<blockquote>
+Meaning does not live only inside documents.<br>
+Meaning also lives in how other documents describe them.
+</blockquote>
+
+<hr>
+
+<h1>🖥 4. Connectivity Servers</h1>
+
+<p>To compute link-based ranking efficiently, we need:</p>
+
+<ul>
+    <li>URL → Outlinks</li>
+    <li>URL → Inlinks</li>
+</ul>
+
+<p>Applications:</p>
+
+<ul>
+    <li>PageRank</li>
+    <li>HITS</li>
+    <li>Crawl optimization</li>
+    <li>Spam detection</li>
+</ul>
+
+<hr>
+
+<h1>🌊 5. PageRank — The Random Surfer Model</h1>
+
+<h2>Soul Definition</h2>
+
+<blockquote>
+PageRank of a page = Long-term probability that a random surfer is on that page.
+</blockquote>
+
+<ul>
+    <li>Surfer starts anywhere.</li>
+    <li>At each step, follows a random outlink.</li>
+</ul>
+
+<p>In the long run:</p>
+<ul>
+    <li>Each page is visited with some stable frequency.</li>
+    <li>That frequency = PageRank.</li>
+</ul>
+
+<hr>
+
+<h1>⚠️ 6. Problem with Pure Random Walk</h1>
+
+<p>Two fatal issues:</p>
+<ol>
+    <li>Dead ends (pages with no outlinks)</li>
+    <li>Spider traps (closed loops)</li>
+</ol>
+
+<ul>
+    <li>Probability gets stuck</li>
+    <li>No unique steady state</li>
+</ul>
+
+<hr>
+
+<h1>✨ 7. Teleportation (Damping)</h1>
+
+<ul>
+    <li>With probability d → follow a link</li>
+    <li>With probability (1 − d) → jump to random page</li>
+</ul>
+
+<p>Typical: d ≈ 0.85</p>
+
+<ul>
+    <li>No dead ends</li>
+    <li>No traps</li>
+    <li>Unique steady state</li>
+    <li>Independence from starting page</li>
+</ul>
+
+<hr>
+
+<h1>📐 8. The Two Halves of PageRank</h1>
+
+<pre>
+PR(A) = (1-d)/N + d * Σ (PR(Y) / outdeg(Y))   where Y → A
+</pre>
+
+<h2>First Half: Teleportation</h2>
+
+<ul>
+    <li>Baseline existence value</li>
+    <li>Independent of links</li>
+    <li>Probability of randomly landing on A</li>
+</ul>
+
+<h2>Second Half: Link-based endorsement</h2>
+
+<ul>
+    <li>Weighted sum of inlinks</li>
+    <li>Authority flows inward</li>
+    <li>High-PR pages contribute more</li>
+    <li>Pages with many outlinks split their vote</li>
+</ul>
+
+<blockquote>
+PageRank(A) = Total probability flowing INTO A.
+</blockquote>
+
+<hr>
+
+<h1>🧮 9. Solving PageRank</h1>
+
+<h2>Method 1: Solve Linear Equations</h2>
+<p>Write one equation per page.<br>
+Solve system.<br>
+Get steady-state values.</p>
+
+<h2>Method 2: Power Method (Iterative)</h2>
+
+<pre>
+x(t+1) = x(t) P
+</pre>
+
+<p>Repeat until convergence.<br>
+Both give SAME result.</p>
+
+<hr>
+
+<h1>🧠 10. Steady State</h1>
+
+<ul>
+    <li>Proportions stabilize.</li>
+    <li>Distribution stops changing.</li>
+    <li>Independent of starting page.</li>
+</ul>
+
+<p>Teleportation makes web graph:</p>
+<ul>
+    <li>Ergodic</li>
+    <li>Convergent</li>
+    <li>Unique steady-state guaranteed</li>
+</ul>
+
+<hr>
+
+<h1>🏀 11. HITS — Hyperlink-Induced Topic Search</h1>
+
+<p>PageRank gives ONE score.<br>
+HITS gives TWO scores:</p>
+
+<ul>
+    <li>Authority score</li>
+    <li>Hub score</li>
+</ul>
+
+<h2>The Soul of HITS</h2>
+
+<blockquote>
+A page is a good authority if many good hubs point TO it.<br>
+A page is a good hub if it points TO many good authorities.
+</blockquote>
+
+<h3>Authority(p)</h3>
+<p>Sum of hub scores of pages pointing TO p.</p>
+
+<h3>Hub(p)</h3>
+<p>Sum of authority scores of pages p points TO.</p>
+
+<h2>Mutual Reinforcement</h2>
+
+<ul>
+    <li>Hubs boost authorities.</li>
+    <li>Authorities boost hubs.</li>
+</ul>
+
+<hr>
+
+<h1>⚡ 12. PageRank vs HITS</h1>
+
+<table>
+    <tr>
+        <th>Feature</th>
+        <th>PageRank</th>
+        <th>HITS</th>
+    </tr>
+    <tr>
+        <td>Query dependent</td>
+        <td>No</td>
+        <td>Yes</td>
+    </tr>
+    <tr>
+        <td>Computed</td>
+        <td>Offline</td>
+        <td>Query time</td>
+    </tr>
+    <tr>
+        <td>Score per page</td>
+        <td>1</td>
+        <td>2</td>
+    </tr>
+    <tr>
+        <td>Scope</td>
+        <td>Entire web</td>
+        <td>Query-specific subgraph</td>
+    </tr>
+    <tr>
+        <td>Model</td>
+        <td>Random surfer</td>
+        <td>Mutual reinforcement</td>
+    </tr>
+</table>
+
+<h2>When is PageRank computed?</h2>
+<p>Offline. Stored. Used at query time.</p>
+
+<h2>When is HITS computed?</h2>
+<p>At query time on a small subgraph.</p>
+
+<hr>
+
+<h1>🧠 Final Conceptual Summary</h1>
+
+<p><strong>PageRank:</strong> Global importance based on probability flow.</p>
+<p><strong>HITS:</strong> Query-specific authority and organization structure.</p>
+
+<hr>
+
+<h1>🪔 Deep Structural Insight</h1>
+
+<ul>
+    <li>PageRank = Probability conservation + teleportation</li>
+    <li>HITS = Bipartite mutual reinforcement</li>
+    <li>Both = Eigenvector problems</li>
+    <li>Both = Fixed-point solutions</li>
+</ul>
+
+<hr>
+
+<h1>💎 Master Mental Model</h1>
+
+<ol>
+    <li>Web is a graph.</li>
+    <li>Links are endorsements.</li>
+    <li>Importance flows inward.</li>
+    <li>Teleportation stabilizes the system.</li>
+    <li>PageRank = long-run visit probability.</li>
+    <li>HITS separates content from organizers.</li>
+</ol>
+
+</body>
+</html>
